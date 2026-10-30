@@ -1,0 +1,18 @@
+# 构建产物
+/bin/
+/dist/
+*.exe
+
+# 测试与覆盖率
+*.out
+*.test
+coverage.txt
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+
+# 本地环境（严禁提交凭据）
+.env
+.env.*

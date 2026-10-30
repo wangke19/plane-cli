@@ -31,7 +31,8 @@ func cmdCycle(a *App, argv []string) error {
 
 func cycleList(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
 	if _, err := f.parse(argv); err != nil {
 		return err
 	}
@@ -65,11 +66,12 @@ func cycleList(a *App, argv []string) error {
 
 func cycleCreate(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
-	f.str("n", "name")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
+	f.strAlias("n", "name")
 	f.str("start")
 	f.str("end")
-	f.str("d", "description")
+	f.strAlias("d", "description")
 	if _, err := f.parse(argv); err != nil {
 		return err
 	}
@@ -116,7 +118,8 @@ func cycleCreate(a *App, argv []string) error {
 
 func cycleIssues(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -156,7 +159,8 @@ func cycleIssues(a *App, argv []string) error {
 
 func cycleAdd(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "remove")
+	f.booleanAlias("h", "help")
+	f.boolean("remove")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -206,7 +210,8 @@ func cmdModule(a *App, argv []string) error {
 	switch sub {
 	case "list":
 		f := addProjectFlag(newFlagSet())
-		f.boolean("h", "help", "json")
+		f.booleanAlias("h", "help")
+		f.boolean("json")
 		if _, err := f.parse(rest); err != nil {
 			return err
 		}
@@ -239,9 +244,10 @@ func cmdModule(a *App, argv []string) error {
 
 	case "create":
 		f := addProjectFlag(newFlagSet())
-		f.boolean("h", "help", "json")
-		f.str("n", "name")
-		f.str("d", "description")
+		f.booleanAlias("h", "help")
+		f.boolean("json")
+		f.strAlias("n", "name")
+		f.strAlias("d", "description")
 		f.str("start")
 		f.str("target")
 		if _, err := f.parse(rest); err != nil {

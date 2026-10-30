@@ -14,7 +14,7 @@ import (
 
 func cmdAuth(a *App, argv []string) error {
 	f := newFlagSet()
-	f.boolean("h", "help")
+	f.booleanAlias("h", "help")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -52,7 +52,8 @@ func cmdProject(a *App, argv []string) error {
 	switch sub {
 	case "list":
 		f := newFlagSet()
-		f.boolean("h", "help", "json")
+		f.booleanAlias("h", "help")
+		f.boolean("json")
 		if _, err := f.parse(rest); err != nil {
 			return err
 		}
@@ -78,7 +79,8 @@ func cmdProject(a *App, argv []string) error {
 
 	case "view":
 		f := newFlagSet()
-		f.boolean("h", "help", "json")
+		f.booleanAlias("h", "help")
+		f.boolean("json")
 		args, err := f.parse(rest)
 		if err != nil {
 			return err
@@ -125,8 +127,10 @@ func cmdProject(a *App, argv []string) error {
 
 	case "create":
 		f := newFlagSet()
-		f.boolean("h", "help", "json", "private")
-		f.str("d", "description")
+		f.booleanAlias("h", "help")
+		f.boolean("json")
+		f.boolean("private")
+		f.strAlias("d", "description")
 		f.str("identifier")
 		args, err := f.parse(rest)
 		if err != nil {

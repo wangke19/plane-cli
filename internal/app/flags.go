@@ -37,14 +37,20 @@ func (f *flagSet) decl(kind string, names ...string) *flagEntry {
 	return e
 }
 
-// str 声明字符串 flag（首个名字为主名，其余为别名）。
-func (f *flagSet) str(names ...string) *flagEntry { return f.decl("string", names...) }
+// str 声明独立的字符串 flag。
+func (f *flagSet) str(name string) *flagEntry { return f.decl("string", name) }
+
+// strAlias 声明共享同一取值的字符串 flag 别名组（如 -t 与 --title）。
+func (f *flagSet) strAlias(names ...string) *flagEntry { return f.decl("string", names...) }
 
 // list 声明可重复出现的字符串列表 flag（nargs=*）。
-func (f *flagSet) list(names ...string) *flagEntry { return f.decl("list", names...) }
+func (f *flagSet) list(name string) *flagEntry { return f.decl("list", name) }
 
-// boolean 声明布尔开关 flag。
-func (f *flagSet) boolean(names ...string) *flagEntry { return f.decl("bool", names...) }
+// boolean 声明独立的布尔开关 flag。
+func (f *flagSet) boolean(name string) *flagEntry { return f.decl("bool", name) }
+
+// booleanAlias 声明共享同一取值的布尔别名组（如 -h 与 --help）。
+func (f *flagSet) booleanAlias(names ...string) *flagEntry { return f.decl("bool", names...) }
 
 // parse 解析参数，返回位置参数列表。
 func (f *flagSet) parse(argv []string) ([]string, error) {

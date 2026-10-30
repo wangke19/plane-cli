@@ -85,14 +85,17 @@ func cmdIssue(a *App, argv []string) error {
 
 // addProjectFlag 声明通用 -p/--project。
 func addProjectFlag(f *flagSet) *flagSet {
-	f.str("p", "project")
+	f.strAlias("p", "project")
 	return f
 }
 
 func issueList(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json", "mine")
-	f.str("state", "priority")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
+	f.boolean("mine")
+	f.str("state")
+	f.str("priority")
 	f.str("limit")
 	if _, err := f.parse(argv); err != nil {
 		return err
@@ -184,7 +187,8 @@ func priorityOrNone(p string) string {
 
 func issueView(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -236,10 +240,11 @@ func parseIssueRef(a *App, f *flagSet, args []string) (*api.Project, string, err
 
 func issueCreate(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
-	f.str("t", "title")
-	f.str("d", "description")
-	f.str("D", "desc-file")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
+	f.strAlias("t", "title")
+	f.strAlias("d", "description")
+	f.strAlias("D", "desc-file")
 	f.str("priority")
 	f.str("state")
 	f.str("due")
@@ -304,11 +309,12 @@ func issueCreate(a *App, argv []string) error {
 
 func issueEdit(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
-	f.str("t", "title")
-	f.str("d", "description")
-	f.str("D", "desc-file")
-	f.str("s", "state")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
+	f.strAlias("t", "title")
+	f.strAlias("d", "description")
+	f.strAlias("D", "desc-file")
+	f.strAlias("s", "state")
 	f.str("priority")
 	f.str("due")
 	args, err := f.parse(argv)
@@ -383,7 +389,7 @@ func issueEdit(a *App, argv []string) error {
 
 func issueTransition(a *App, action string, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help")
+	f.booleanAlias("h", "help")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -420,7 +426,8 @@ func issueTransition(a *App, action string, argv []string) error {
 
 func issueDelete(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "y", "yes")
+	f.booleanAlias("h", "help")
+	f.booleanAlias("y", "yes")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -452,9 +459,9 @@ func issueDelete(a *App, argv []string) error {
 
 func issueComment(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help")
-	f.str("d", "text")
-	f.str("F", "text-file")
+	f.booleanAlias("h", "help")
+	f.strAlias("d", "text")
+	f.strAlias("F", "text-file")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -491,7 +498,8 @@ func issueComment(a *App, argv []string) error {
 
 func issueComments(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
@@ -534,7 +542,8 @@ func issueComments(a *App, argv []string) error {
 
 func issueAssign(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "clear")
+	f.booleanAlias("h", "help")
+	f.boolean("clear")
 	f.list("remove")
 	args, err := f.parse(argv)
 	if err != nil {
@@ -575,7 +584,8 @@ func issueAssign(a *App, argv []string) error {
 
 func issueLabelCmd(a *App, argv []string) error {
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "clear")
+	f.booleanAlias("h", "help")
+	f.boolean("clear")
 	f.list("remove")
 	args, err := f.parse(argv)
 	if err != nil {

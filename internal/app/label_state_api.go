@@ -21,7 +21,8 @@ func cmdState(a *App, argv []string) error {
 		return usagef("未知 state 子命令 '%s'", argv[0])
 	}
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
 	if _, err := f.parse(argv[1:]); err != nil {
 		return err
 	}
@@ -57,7 +58,8 @@ func cmdLabel(a *App, argv []string) error {
 	}
 	sub, rest := argv[0], argv[1:]
 	f := addProjectFlag(newFlagSet())
-	f.boolean("h", "help", "json")
+	f.booleanAlias("h", "help")
+	f.boolean("json")
 	switch sub {
 	case "list":
 		if _, err := f.parse(rest); err != nil {
@@ -92,7 +94,7 @@ func cmdLabel(a *App, argv []string) error {
 
 	case "create":
 		f.str("color")
-		f.str("d", "description")
+		f.strAlias("d", "description")
 		args, err := f.parse(rest)
 		if err != nil {
 			return err
@@ -137,15 +139,17 @@ func cmdLabel(a *App, argv []string) error {
 
 func cmdAPI(a *App, argv []string) error {
 	f := newFlagSet()
-	f.boolean("h", "help", "raw")
-	f.str("B", "body-file")
+	f.booleanAlias("h", "help")
+	f.boolean("raw")
+	f.strAlias("B", "body-file")
 	args, err := f.parse(argv)
 	if err != nil {
 		return err
 	}
 	if f.helpReq {
 		fmt.Fprintln(a.Out, `用法: plane api <METHOD> <PATH> [JSON体] [-B 文件] [--raw]
-PATH 省略 /api/v1/ 前缀；以 / 开头则原样使用`)
+PATH 规则：以 / 开头原样使用；以 workspaces/ 开头原样使用；
+其余相对路径自动补 workspaces/{工作区}/ 前缀（如 projects/ → workspaces/acme/projects/）`)
 		return nil
 	}
 	if len(args) < 2 {
@@ -158,6 +162,12 @@ PATH 省略 /api/v1/ 前缀；以 / 开头则原样使用`)
 		return usagef("不支持的 METHOD '%s'", args[0])
 	}
 	path := args[1]
+	switch {
+	case strings.HasPrefix(path, "/"): // 绝对路径原样使用
+	case strings.HasPrefix(path, "workspaces/"): // 已带工作区前缀
+	default: // 相对路径自动补 workspaces/{工作区}/
+		path = fmt.Sprintf("workspaces/%s/%s", a.Cfg.Workspace, path)
+	}
 	var body any
 	if len(args) >= 3 {
 		if err := json.Unmarshal([]byte(strings.Join(args[2:], " ")), &body); err != nil {

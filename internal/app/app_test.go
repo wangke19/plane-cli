@@ -34,10 +34,11 @@ func TestMergeIDs(t *testing.T) {
 
 func TestFlagSetInterleaved(t *testing.T) {
 	f := newFlagSet()
-	f.str("p", "project")
-	f.str("d", "description")
+	f.strAlias("p", "project")
+	f.strAlias("d", "description")
 	f.boolean("clear")
-	f.list("remove", "members")
+	f.list("remove")
+	f.list("members")
 	args, err := f.parse([]string{"8", "kewang", "--remove", "bot", "-p", "demo", "extra", "--clear", "--description=hello"})
 	if err != nil {
 		t.Fatalf("parse: %v", err)

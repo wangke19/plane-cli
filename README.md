@@ -44,6 +44,8 @@ make install        # 安装为 ~/.local/bin/plane-go
 go build -ldflags "-X main.version=$(git describe --tags --always)" -o plane ./cmd/plane
 ```
 
+> `make install` 默认安装为 `plane-go`，可用 `make install INSTALL_TO=~/.local/bin/plane` 自定义名字。
+
 ### 配置
 
 凭据只从环境变量读取（代码与仓库不落盘任何真实地址与凭据）：
@@ -86,6 +88,58 @@ plane module list -p demo                          # 模块
 plane label create bug --color "#ff0000" -p demo   # 建标签
 
 plane api GET workspaces/acme/projects/ --raw      # 任意 REST 端点（逃生舱）
+```
+
+### 在 AI Agent 中使用
+
+CLI 是 Agent 操作 Plane 最可靠的方式：单二进制、确定性的退出码与 JSON 输出，不依赖浏览器或 MCP 运行时。
+
+**① 安装并注入凭据**
+
+Agent 的 shell 通常**不会加载** `~/.bashrc`，三种注入方式任选：
+
+```bash
+# 方式 A：写进 rc 文件，交互式 shell 直接可用
+export PLANE_TOKEN=... PLANE_BASE_URL=... PLANE_WORKSPACE=...
+
+# 方式 B：在 Agent 配置里声明环境变量（ZCode / Claude Code / Cursor 均支持 env 配置）
+
+# 方式 C：单次调用显式传入
+env PLANE_TOKEN=... PLANE_BASE_URL=... PLANE_WORKSPACE=... plane issue list -p demo
+```
+
+**② 写入 Agent 记忆（AGENTS.md / CLAUDE.md）**
+
+把下面模板粘到项目的 `AGENTS.md`（或用户级 `~/.zcode/AGENTS.md`），之后每个会话的 Agent
+都会优先用本工具操作 Plane，而不是手写 curl：
+
+```markdown
+## Plane 项目管理
+操作 Plane 一律用 `plane` CLI（gh 风格），不要手写 curl/API 调用：
+- plane issue list -p <项目> [--state todo] [--json]   # 任务列表，--json 供解析
+- plane issue create -p <项目> -t "标题" -d "描述" --priority high --due 2026-12-01
+- plane issue view / edit / comment <编号> -p <项目>
+- plane issue close <编号> -p <项目>                   # 完成用 close，不要 delete
+要点：错误走 stderr、退出码 1；export PLANE_PROJECT=<项目> 后可省略 -p；
+429 限流已内置退避，大批量操作请串行小步执行。
+```
+
+**③ 输出契约（Agent 编程接口）**
+
+| 约定 | 说明 |
+|------|------|
+| 退出码 | `0` 成功，`1` 失败，`2` 用法错误——无需解析文本即可判断结果 |
+| `--json` | 所有 list/view 命令输出原始 JSON（数组或对象），供 jq / 代码解析 |
+| stderr | 全部错误信息走 stderr，stdout 只放业务输出，可直接管道 |
+| `PLANE_PROJECT` | 设置后省略 `-p`，适合按项目划分 Agent 工作区 |
+
+**④ 典型指令示例**
+
+```text
+"看看 demo 项目到期的高优任务"        → plane issue list -p demo --priority high --json
+"把 #8 关掉并说明已完成"             → plane issue comment 8 -d "已完成" && plane issue close 8
+"给本周建 Sprint 并放入 P0 任务"      → plane cycle create ... && plane cycle add Sprint1 8
+"把登录问题指派给 alice 并打上 bug 标签" → plane issue assign 12 alice && plane issue label 12 bug
 ```
 
 ### 设计说明
@@ -198,6 +252,65 @@ plane module list -p demo                          # modules
 plane label create bug --color "#ff0000" -p demo   # create a label
 
 plane api GET workspaces/acme/projects/ --raw      # any REST endpoint (escape hatch)
+```
+
+### Using with AI agents
+
+A CLI is the most reliable way for an agent to operate Plane: a single binary with deterministic
+exit codes and JSON output — no browser automation or MCP runtime required.
+
+**① Install and inject credentials**
+
+Agent shells usually do **not** source `~/.bashrc`. Three options:
+
+```bash
+# Option A: rc file — available in interactive shells
+export PLANE_TOKEN=... PLANE_BASE_URL=... PLANE_WORKSPACE=...
+
+# Option B: declare the variables in your agent configuration
+# (ZCode / Claude Code / Cursor all support per-project env settings)
+
+# Option C: pass explicitly per invocation
+env PLANE_TOKEN=... PLANE_BASE_URL=... PLANE_WORKSPACE=... plane issue list -p demo
+```
+
+**② Put it in agent memory (AGENTS.md / CLAUDE.md)**
+
+Paste the template below into your project's `AGENTS.md` (or the user-level
+`~/.zcode/AGENTS.md`); every future session will then prefer this tool over hand-written
+curl/API calls:
+
+```markdown
+## Plane project management
+Always use the `plane` CLI (gh-style) to operate Plane; never hand-write curl/API calls:
+- plane issue list -p <project> [--state todo] [--json]   # --json for parsing
+- plane issue create -p <project> -t "Title" -d "Body" --priority high --due 2026-12-01
+- plane issue view / edit / comment <number> -p <project>
+- plane issue close <number> -p <project>                 # use close, never delete
+Notes: errors go to stderr with exit code 1; export PLANE_PROJECT=<project> to omit -p;
+429 rate-limit backoff is built in, but keep bulk operations sequential.
+```
+
+**③ Output contract (the agent-facing API)**
+
+| Contract | Detail |
+|----------|--------|
+| Exit codes | `0` success, `1` failure, `2` usage error — parse-free result checking |
+| `--json` | All list/view commands emit raw JSON (array or object) for jq or code |
+| stderr | All errors go to stderr; stdout carries data only — safe to pipe |
+| `PLANE_PROJECT` | Set it to omit `-p`; handy for scoping an agent to one project |
+
+**④ Example instructions**
+
+```text
+"show my high-priority tasks due this week in demo"
+    → plane issue list -p demo --priority high --json
+"close #8 with a completion note"
+    → plane issue comment 8 -d "done" && plane issue close 8
+"create this week's sprint and put the P0 items in it"
+    → plane cycle create ... && plane cycle add Sprint1 8
+"assign the login bug to alice and label it bug"
+    → plane issue assign 12 alice && plane issue label 12 bug
 ```
 
 ### Design notes
